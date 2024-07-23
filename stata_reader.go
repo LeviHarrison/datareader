@@ -710,7 +710,9 @@ func (rdr *StataReader) translateVartypes() error {
 			rdr.varTypes[k] = StataFloat64Type
 		case rdr.varTypes[k] <= 244:
 			// strf
-			continue
+			if rdr.FormatVersion <= 108 {
+				rdr.varTypes[k] -= 127
+			}
 		default:
 			return fmt.Errorf("unknown variable type")
 		}
@@ -1219,6 +1221,7 @@ func (rdr *StataReader) readRow(i int, buf, buf8 []byte, data []interface{}, mis
 		case t == StataInt8Type:
 			var x int8
 			if err := binary.Read(rdr.reader, rdr.ByteOrder, &x); err != nil {
+				fmt.Println(t)
 				panic(err)
 			}
 			if x < -127 || x > 100 {
@@ -1266,7 +1269,6 @@ func (rdr *StataReader) Read(rows int) ([]*Series, error) {
 		if rdr.rowsRead > int(rdr.rowCount) {
 			break
 		}
-
 		rdr.readRow(i, buf, buf8, data, missing)
 	}
 
